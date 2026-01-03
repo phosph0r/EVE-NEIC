@@ -8,7 +8,9 @@
         x:Class="EVE_NEIC.App.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
         Icon="/Assets/avalonia-logo.ico"
-        Title="New Eden Industrial Companion">
+        Title="New Eden Industrial Companion"
+        
+        xmlns:asyncImageLoader="clr-namespace:AsyncImageLoader;assembly=AsyncImageLoader.Avalonia">
 
     <Design.DataContext>
         <!-- This only sets the DataContext for the previewer in an IDE,
@@ -73,10 +75,27 @@
         <Border Grid.Column="1" Background="#2b2b2b" CornerRadius="5" Padding="20">
             <!-- Only show this if a blueprint is selected -->
             <StackPanel IsVisible="{Binding SelectedBlueprint, Converter={x:Static ObjectConverters.IsNotNull}}">
-                <TextBlock Text="{Binding SelectedBlueprint.Name}"
-                           FontSize="24"
-                           FontWeight="Bold"
-                           Margin="0,0,0,10" />
+                <Grid ColumnDefinitions="64, *" RowDefinitions="Auto, Auto">
+                    <!-- The Icon -->
+                    <Image Grid.Column="0" Grid.RowSpan="2"
+                           Width="64" Height="64"
+                           Margin="0,0,15,0"
+                           asyncImageLoader:ImageLoader.Source="{Binding SelectedBlueprint.IconUrl}"/>
+                    <!-- The Title -->
+                    <TextBlock Grid.Column="1" Grid.Row="0" 
+                               Text="{Binding SelectedBlueprint.Name}"
+                               FontSize="24"
+                               FontWeight="Bold"
+                               Margin="0,0,0,10" />
+                    <!-- The Group Name -->
+                    <TextBlock Grid.Column="1" Grid.Row="1"
+                               Text="{Binding SelectedBlueprint.GroupName}"
+                               Foreground="Gray" FontSize="14"
+                               VerticalAlignment="Top"/>
+                    </Grid>
+                
+                <Separator Height="1" Background="#33ffffff" Margin="0,10"/>
+                
                 <TextBlock Text="Description" FontWeight="Bold" Margin="0,10,0,5" />
                 <TextBlock Text="{Binding SelectedBlueprint.Description}"
                            TextWrapping="Wrap"
