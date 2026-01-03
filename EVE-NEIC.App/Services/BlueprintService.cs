@@ -39,9 +39,12 @@ public class BlueprintService
         return await RefreshCacheAsync();
     }
 
-    public async Task<List<Blueprint>> RefreshCacheAsync()
+    public async Task<List<Blueprint>> RefreshCacheAsync(IProgress<string>? progress = null)
     {
         var blueprints = new List<Blueprint>();
+        
+        // Temporary cache to avoid fetching the same group name multiple times
+        var groupNames = new Dictionary<int, string>();
 
         try
         {
@@ -51,23 +54,36 @@ public class BlueprintService
 
             foreach (var groupId in categoryResponse.groups)
             {
-                // Get the Type IDs for each group
-                var groupResponse = await _httpClient.GetFromJsonAsync<GroupResponse>($"universe/groups/{groupId}/");
-                if (groupResponse?.types == null) continue;
-
-                foreach (var typeId in groupResponse.types)
+                // Fetch the group name if we haven't already
+                if (!groupNames.ContainsKey(groupId))
                 {
-                    // Get details for each type
-                    var typeResponse = await _httpClient.GetFromJsonAsync<TypeResponse>($"universe/types/{typeId}/");
-
-                    if (typeResponse != null && typeResponse.published)
+                    var groupResponse = await _httpClient.GetFromJsonAsync<GroupResponse>($"universe/groups/{groupId}/");
+                    if (groupResponse != null)
                     {
-                        blueprints.Add(new Blueprint()
+                        groupNames[groupId] = groupResponse.name;
+                        
+                        // Now get the types for this group
+                        if (groupResponse.types != null)
                         {
-                            TypeId = typeId,
-                            Name = typeResponse.name,
-                            GroupId = groupId
-                        });
+                            foreach (var typeId in groupResponse.types)
+                            {
+                                // Get details for each type
+                                var typeResponse = await _httpClient.GetFromJsonAsync<TypeResponse>($"universe/types/{typeId}/");
+
+                                if (typeResponse != null && typeResponse.published)
+                                {
+                                    progress?.Report($"Adding blueprint {typeResponse.name}");
+                                    
+                                    blueprints.Add(new Blueprint()
+                                    {
+                                        TypeId = typeId,
+                                        Name = typeResponse.name,
+                                        GroupId = groupId,
+                                        GroupName = groupNames[groupId]
+                                    });
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -87,6 +103,6 @@ public class BlueprintService
     
     // Helper records to match ESI JSON structure
     private record CategoryResponse(List<int> groups);
-    private record GroupResponse(List<int> types);
+    private record GroupResponse(string name, List<int> types);
     private record TypeResponse(string name, bool published);
 }

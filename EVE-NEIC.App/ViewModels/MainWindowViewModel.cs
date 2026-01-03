@@ -1,9 +1,12 @@
-﻿using System.Collections.ObjectModel;
+﻿using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using EVE_NEIC.App.Services;
 using EVE_NEIC.App.Models;
+using System.Linq;
 
 namespace EVE_NEIC.App.ViewModels;
 
@@ -15,7 +18,7 @@ public partial class MainWindowViewModel : ViewModelBase
 
     [ObservableProperty] private bool _isBusy;
 
-    public ObservableCollection<Blueprint> Blueprints { get; } = new();
+    public ObservableCollection<BlueprintGroup> GroupedBlueprints { get; } = new();
 
     public MainWindowViewModel()
     {
@@ -30,32 +33,52 @@ public partial class MainWindowViewModel : ViewModelBase
         StatusText = "Loading blueprints...";
 
         var list = await _blueprintService.GetBlueprintsAsync();
-        
-        Blueprints.Clear();
-        foreach (var blueprint in list)
-        {
-            Blueprints.Add(blueprint);
-        }
+
+        UpdateGroupedList(list);
         
         IsBusy = false;
-        StatusText = $"Loaded {Blueprints.Count} blueprints.";
+        StatusText = $"Loaded {list.Count} blueprints across {GroupedBlueprints.Count} categories.";
     }
 
     [RelayCommand]
     private async Task RefreshBlueprintsAsync()
     {
         IsBusy = true;
-        StatusText = "Refreshing blueprints from ESI (this may take a while)...";
-        
-        var list = await _blueprintService.RefreshCacheAsync();
-        
-        Blueprints.Clear();
-        foreach (var blueprint in list)
+
+        var progress = new Progress<string>(name =>
         {
-            Blueprints.Add(blueprint);
-        }
+            StatusText = $"Refreshing blueprints from ESI (this may take a while)...[{name}]";
+        });
+        
+        var list = await _blueprintService.RefreshCacheAsync(progress);
+        
+        UpdateGroupedList(list);
         
         IsBusy = false;
-        StatusText = $"Refreshed {Blueprints.Count} blueprints.";
+        StatusText = $"Refreshed {list.Count} blueprints.";
+    }
+
+    private void UpdateGroupedList(List<Blueprint> flatList)
+    {
+        GroupedBlueprints.Clear();
+        
+        // LINQ Magic -> Group by Name -> Sort the groups by Name -> for each group sort its blueprints by name
+        var groups = flatList
+            .GroupBy(b => b.GroupName)
+            .OrderBy(g => g.Key)
+            .Select(g => new BlueprintGroup
+            {
+                Name = g.Key,
+                Blueprints = g.OrderBy(b => b.Name).ToList()
+            });
+
+        foreach (var group in groups)
+        {
+            GroupedBlueprints.Add(group);
+            
+            Console.WriteLine($"{group.Name}: {group.Blueprints.Count} blueprints");
+        }
+        
+        
     }
 }
