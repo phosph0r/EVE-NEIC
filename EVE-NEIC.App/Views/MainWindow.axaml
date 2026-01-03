@@ -20,6 +20,9 @@
     <DockPanel Margin="0,0,10,0">
         <!-- Top Area: Status and Progress -->
         <StackPanel DockPanel.Dock="Top" Spacing="5" Margin="0,0,0,10">
+            <TextBox Text="{Binding SearchText}"
+                     Watermark="Search blueprints..."
+                     Margin="0,0,0,5"/>
             <TextBlock Text="{Binding StatusText}" FontWeight="Bold" TextWrapping="Wrap" FontSize="12"/>
             <ProgressBar IsIndeterminate="{Binding IsBusy}"
                          IsVisible="{Binding IsBusy}"
@@ -40,7 +43,7 @@
             <ItemsControl ItemsSource="{Binding GroupedBlueprints}">
                 <ItemsControl.ItemTemplate>
                 <DataTemplate x:DataType="models:BlueprintGroup">
-                    <Expander Header="{Binding Name}" IsExpanded="False" HorizontalAlignment="Stretch" Margin="0,2">
+                    <Expander Header="{Binding Name}" IsExpanded="{Binding IsExpanded}" HorizontalAlignment="Stretch" Margin="0,2">
                         <ListBox ItemsSource="{Binding Blueprints}">
                             <ListBox.ItemTemplate>
                                 <DataTemplate x:DataType="models:Blueprint">

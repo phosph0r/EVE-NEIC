@@ -33,8 +33,9 @@ public partial class MainWindowViewModel : ViewModelBase
         StatusText = "Loading blueprints...";
 
         var list = await _blueprintService.GetBlueprintsAsync();
-
-        UpdateGroupedList(list);
+        
+        _allBlueprints = list;
+        FilterBlueprints();
         
         IsBusy = false;
         StatusText = $"Loaded {list.Count} blueprints across {GroupedBlueprints.Count} categories.";
@@ -51,8 +52,8 @@ public partial class MainWindowViewModel : ViewModelBase
         });
         
         var list = await _blueprintService.RefreshCacheAsync(progress);
-        
-        UpdateGroupedList(list);
+        _allBlueprints = list;
+        FilterBlueprints();
         
         IsBusy = false;
         StatusText = $"Refreshed {list.Count} blueprints.";
@@ -62,6 +63,9 @@ public partial class MainWindowViewModel : ViewModelBase
     {
         GroupedBlueprints.Clear();
         
+        // Check if we are currently searching
+        bool shouldExpand = !string.IsNullOrWhiteSpace(SearchText);
+        
         // LINQ Magic -> Group by Name -> Sort the groups by Name -> for each group sort its blueprints by name
         var groups = flatList
             .GroupBy(b => b.GroupName)
@@ -69,7 +73,8 @@ public partial class MainWindowViewModel : ViewModelBase
             .Select(g => new BlueprintGroup
             {
                 Name = g.Key,
-                Blueprints = g.OrderBy(b => b.Name).ToList()
+                Blueprints = g.OrderBy(b => b.Name).ToList(),
+                IsExpanded = shouldExpand
             });
 
         foreach (var group in groups)
@@ -78,7 +83,24 @@ public partial class MainWindowViewModel : ViewModelBase
             
             Console.WriteLine($"{group.Name}: {group.Blueprints.Count} blueprints");
         }
+    }
+    
+    
+    [ObservableProperty] private string _searchText = string.Empty;
+    private List<Blueprint> _allBlueprints = new();
+
+    partial void OnSearchTextChanged(string value)
+    {
+        FilterBlueprints();
+    }
+
+    private void FilterBlueprints()
+    {
+        // If search is empty, show all blueprints
+        var filtered = string.IsNullOrWhiteSpace(SearchText)
+            ? _allBlueprints
+            : _allBlueprints.Where(b => b.Name.Contains(SearchText, StringComparison.OrdinalIgnoreCase)).ToList();
         
-        
+        UpdateGroupedList(filtered);
     }
 }

@@ -6,4 +6,5 @@ public class BlueprintGroup
 {
     public string Name { get; set; } = string.Empty;
     public List<Blueprint> Blueprints { get; set; } = new();
+    public bool IsExpanded { get; set; }
 }
