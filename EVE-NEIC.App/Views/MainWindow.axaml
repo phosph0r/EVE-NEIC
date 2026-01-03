@@ -4,6 +4,7 @@
         xmlns:models="using:EVE_NEIC.App.Models"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:conv="using:EVE_NEIC.App.Converters"
         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
         x:Class="EVE_NEIC.App.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
@@ -12,6 +13,10 @@
 
         xmlns:asyncImageLoader="clr-namespace:AsyncImageLoader;assembly=AsyncImageLoader.Avalonia">
 
+    <Window.Resources>
+        <conv:ProfitColorConverter x:Key="ProfitColorConverter"/>
+    </Window.Resources>
+    
     <Design.DataContext>
         <!-- This only sets the DataContext for the previewer in an IDE,
              to set the actual DataContext for runtime, set the DataContext property in code (look at App.axaml.cs) -->
@@ -71,7 +76,7 @@
             </ScrollViewer>
         </DockPanel>
 
-        <!-- RIGHT SIDE: Future Details Area -->
+        <!-- RIGHT SIDE: Details Area -->
         <Border Grid.Column="1" Background="#2b2b2b" CornerRadius="5" Padding="20">
             <!-- Only show this if a blueprint is selected -->
             <StackPanel IsVisible="{Binding SelectedBlueprint, Converter={x:Static ObjectConverters.IsNotNull}}">
@@ -151,6 +156,33 @@
                                    Foreground="#00ff00"
                                    FontWeight="Bold"
                                    FontSize="18" />
+                    </DockPanel>
+                </StackPanel>
+                
+                <StackPanel>
+                    <DockPanel Margin="0,0,0,5">
+                        <TextBlock Text="Market Value (Jita Sell):" FontSize="12" Opacity="0.7"/>
+                        <TextBlock Text="{Binding SelectedBlueprint.ProductPrice, StringFormat='\{0:N2\} ISK'}"
+                                   DockPanel.Dock="Right"
+                                   TextAlignment="Right"/>
+                    </DockPanel>
+                    
+                    <!-- Profit Display -->
+                    <DockPanel>
+                        <TextBlock Text="Est. Profit:" FontWeight="Bold" FontSize="16"/>
+                        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Spacing="10">
+                            <!-- Percent Margin -->
+                            <TextBlock Text="{Binding SelectedBlueprint.Margin, StringFormat='({0:F1}%)'}"
+                                       VerticalAlignment="Center"
+                                       FontSize="12"
+                                       Foreground="{Binding SelectedBlueprint.Profit, Converter={StaticResource ProfitColorConverter}}"/>
+                            <!-- Cash Profit -->
+                            <TextBlock Text="{Binding SelectedBlueprint.Profit, StringFormat='\{0:N2\} ISK'}"
+                                       TextAlignment="Right"
+                                       FontWeight="Bold"
+                                       FontSize="18"
+                                       Foreground="{Binding SelectedBlueprint.Profit, Converter={StaticResource ProfitColorConverter}}"/>
+                        </StackPanel>
                     </DockPanel>
                 </StackPanel>
             </StackPanel>

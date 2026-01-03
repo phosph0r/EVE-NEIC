@@ -59,7 +59,7 @@ public class BlueprintService
                 
                 command.CommandText =
                     @"
-                    SELECT invTypes.typeID, invTypes.typeName, COALESCE(product.description, invTypes.description) AS description, invGroups.groupName
+                    SELECT invTypes.typeID, invTypes.typeName, COALESCE(product.description, invTypes.description) AS description, invGroups.groupName, iap.productTypeID
                     FROM invTypes
                     JOIN invGroups ON invTypes.groupID = invGroups.groupID
                     -- Link the blueprint to it's manufactured product
@@ -79,7 +79,8 @@ public class BlueprintService
                             Name = reader.GetString(1),
                             // Handle potential null descriptions
                             Description = reader.IsDBNull(2) ? "" : reader.GetString(2),
-                            GroupName = reader.GetString(3)
+                            GroupName = reader.GetString(3),
+                            ProductTypeId = reader.IsDBNull(4) ? 0 : reader.GetInt32(4)
                         });
                     }
                 }

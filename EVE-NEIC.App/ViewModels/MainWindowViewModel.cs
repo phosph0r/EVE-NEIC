@@ -131,7 +131,7 @@ public partial class MainWindowViewModel : ViewModelBase
             // We use Task.Run so we don't block the UI while talking to the database
             Task.Run(async () =>
             {
-                // Get the materials from local SDE database
+                // Get the materials from a local SDE database
                 if (value.Materials.Count == 0)
                 {
                     var materials = await _blueprintService.GetMaterialsForBlueprintAsync(value.TypeId);
@@ -171,6 +171,20 @@ public partial class MainWindowViewModel : ViewModelBase
                     
                     StatusText = $"Loaded {value.Materials.Count} materials with live Jita prices.";
                 }
+                
+                // Fetch the completed product price
+                StatusText = $"Calculating profitability...";
+                var productPrice = await _blueprintService.GetJitaSellPriceAsync(value.ProductTypeId);
+
+                await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
+                {
+                    value.ProductPrice = productPrice;
+
+                    // Final UI refresh
+                    OnPropertyChanged(nameof(SelectedBlueprint));
+                });
+
+                StatusText = "Analysis Complete!";
             });
         }
         
