@@ -13,78 +13,105 @@
     <Design.DataContext>
         <!-- This only sets the DataContext for the previewer in an IDE,
              to set the actual DataContext for runtime, set the DataContext property in code (look at App.axaml.cs) -->
-        <vm:MainWindowViewModel/>
+        <vm:MainWindowViewModel />
     </Design.DataContext>
-    
+
     <Grid ColumnDefinitions="450, *">
         <!-- Blueprint Selection Panel -->
         <DockPanel Margin="0,0,10,0">
-        <!-- Top Area: Status and Progress -->
-        <StackPanel DockPanel.Dock="Top" Spacing="5" Margin="0,0,0,10">
-            <TextBox Text="{Binding SearchText}"
-                     Watermark="Search blueprints..."
-                     Margin="0,0,0,5"/>
-            <TextBlock Text="{Binding StatusText}" FontWeight="Bold" TextWrapping="Wrap" FontSize="12"/>
-            <ProgressBar Value="{Binding DownloadProgress}"
-                         Minimum="0"
-                         Maximum="100"
-                         IsIndeterminate="False"
-                         ShowProgressText="True"
-                         Height="16"
-                         IsVisible="{Binding IsBusy}"/>
-        </StackPanel>
-        
-        <!-- Bottom Area: Actions -->
-        <StackPanel DockPanel.Dock="Bottom" Margin="0,10,0,0">
-            <Button Content="Refresh Bluerints from EVE Online"
-                    Command="{Binding RefreshBlueprintsCommand}"
-                    HorizontalAlignment="Stretch"
-                    HorizontalContentAlignment="Center"
-                    Margin="0,10,0,0"/>
-        </StackPanel>
+            <!-- Top Area: Status and Progress -->
+            <StackPanel DockPanel.Dock="Top" Spacing="5" Margin="0,0,0,10">
+                <TextBox Text="{Binding SearchText}"
+                         Watermark="Search blueprints..."
+                         Margin="0,0,0,5" />
+                <TextBlock Text="{Binding StatusText}" FontWeight="Bold" TextWrapping="Wrap" FontSize="12" />
+                <ProgressBar Value="{Binding DownloadProgress}"
+                             Minimum="0"
+                             Maximum="100"
+                             IsIndeterminate="False"
+                             ShowProgressText="True"
+                             Height="16"
+                             IsVisible="{Binding IsBusy}" />
+            </StackPanel>
 
-        <!-- Center Area: The List -->
-        <ScrollViewer>
-            <ItemsControl ItemsSource="{Binding GroupedBlueprints}">
-                <ItemsControl.ItemTemplate>
-                <DataTemplate x:DataType="models:BlueprintGroup">
-                    <Expander Header="{Binding Name}" IsExpanded="{Binding IsExpanded}" HorizontalAlignment="Stretch" Margin="0,2">
-                        <ListBox ItemsSource="{Binding Blueprints}" SelectedItem="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).SelectedBlueprint}">
-                            <ListBox.ItemTemplate>
-                                <DataTemplate x:DataType="models:Blueprint">
-                                    <StackPanel Orientation="Horizontal" Spacing="10">
-                                        <TextBlock Text="{Binding TypeId}" Foreground="Gray" FontSize="10"
-                                                   VerticalAlignment="Center" />
-                                        <TextBlock Text="{Binding Name}" VerticalAlignment="Center" />
-                                    </StackPanel>
-                                </DataTemplate>
-                            </ListBox.ItemTemplate>
-                        </ListBox>
-                    </Expander>
-                </DataTemplate>
+            <!-- Bottom Area: Actions -->
+            <StackPanel DockPanel.Dock="Bottom" Margin="0,10,0,0">
+                <Button Content="Refresh Blueprints from Local SDE"
+                        Command="{Binding RefreshBlueprintsCommand}"
+                        HorizontalAlignment="Stretch"
+                        HorizontalContentAlignment="Center"
+                        Margin="0,10,0,0" />
+            </StackPanel>
+
+            <!-- Center Area: The List -->
+            <ScrollViewer>
+                <ItemsControl ItemsSource="{Binding GroupedBlueprints}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="models:BlueprintGroup">
+                            <Expander Header="{Binding Name}" IsExpanded="{Binding IsExpanded}"
+                                      HorizontalAlignment="Stretch" Margin="0,2">
+                                <ListBox ItemsSource="{Binding Blueprints}"
+                                         SelectedItem="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).SelectedBlueprint}">
+                                    <ListBox.ItemTemplate>
+                                        <DataTemplate x:DataType="models:Blueprint">
+                                            <StackPanel Orientation="Horizontal" Spacing="10">
+                                                <TextBlock Text="{Binding TypeId}" Foreground="Gray" FontSize="10"
+                                                           VerticalAlignment="Center" />
+                                                <TextBlock Text="{Binding Name}" VerticalAlignment="Center" />
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </ListBox.ItemTemplate>
+                                </ListBox>
+                            </Expander>
+                        </DataTemplate>
                     </ItemsControl.ItemTemplate>
-            </ItemsControl>
-        </ScrollViewer>
-    </DockPanel> 
-        
+                </ItemsControl>
+            </ScrollViewer>
+        </DockPanel>
+
         <!-- RIGHT SIDE: Future Details Area -->
         <Border Grid.Column="1" Background="#2b2b2b" CornerRadius="5" Padding="20">
             <!-- Only show this if a blueprint is selected -->
             <StackPanel IsVisible="{Binding SelectedBlueprint, Converter={x:Static ObjectConverters.IsNotNull}}">
-            <TextBlock Text="{Binding SelectedBlueprint.Name}"
-                       FontSize="24"
-                       FontWeight="Bold"
-                       Margin="0,0,0,10"/>
-            <TextBlock Text="Description" FontWeight="Bold" Margin="0,10,0,5"/>
-            <TextBlock Text="{Binding SelectedBlueprint.Description}"
-                       TextWrapping="Wrap"
-                       Opacity="0.8"/>
-            
-            <TextBlock Text="{Binding SelectedBlueprint.TypeId, StringFormat='Type ID: {0}'}"
-                       FontSize="10"
-                       Foreground="Gray"
-                       Margin="0,20,0,0"/>
+                <TextBlock Text="{Binding SelectedBlueprint.Name}"
+                           FontSize="24"
+                           FontWeight="Bold"
+                           Margin="0,0,0,10" />
+                <TextBlock Text="Description" FontWeight="Bold" Margin="0,10,0,5" />
+                <TextBlock Text="{Binding SelectedBlueprint.Description}"
+                           TextWrapping="Wrap"
+                           Opacity="0.8" />
+                
+                <TextBlock Text="Manufacturing Materials" FontWeight="Bold" Margin="0,20,0,5"/>
+                
+                <Border Background="#1a1a1a" CornerRadius="5" Padding="10">
+                        <ItemsControl ItemsSource="{Binding SelectedBlueprint.Materials}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="models:Material">
+                                    <!-- Wrap the row in a border to provide a separator line -->
+                                    <Border BorderBrush="#33ffffff"
+                                            BorderThickness="0,0,0,1"
+                                            Padding="0,4">
+                                    <DockPanel Margin="0.2">
+                                        <TextBlock Text="{Binding Quantity, StringFormat='\{0:N0\}'}"
+                                                   DockPanel.Dock="Right"
+                                                   Foreground="#ffb300"
+                                                   FontWeight="Bold"
+                                                   TextAlignment="Right"
+                                                   />
+                                        <TextBlock Text="{Binding Name}"
+                                                   HorizontalAlignment="Left"/>
+                                        </DockPanel>
+                                        </Border>
+                                    </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                </Border>
+                <TextBlock Text="{Binding SelectedBlueprint.TypeId, StringFormat='Type ID: {0}'}"
+                           FontSize="10"
+                           Foreground="Gray"
+                           Margin="0,20,0,0" />
             </StackPanel>
-            </Border>
-        </Grid>
+        </Border>
+    </Grid>
 </Window>

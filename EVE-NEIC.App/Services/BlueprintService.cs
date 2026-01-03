@@ -2,8 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Net.Http;
-using System.Net.Http.Json;
-using System.Text.Json;
 using System.Threading.Tasks;
 using Avalonia.Controls.Converters;
 using EVE_NEIC.App.Models;
@@ -153,83 +151,49 @@ public class BlueprintService
             progress?.Report("SDE Database Ready!");
         }
     }
-    
-    public async Task<List<Blueprint>> GetBlueprintsAsync(bool forceRefresh = false)
-    {
-        // Check if cache exists and we aren't forcing a refresh
-        if (!forceRefresh && File.Exists(_cacheFilePath))
-        {
-            using var stream = File.OpenRead(_cacheFilePath);
-            return await JsonSerializer.DeserializeAsync<List<Blueprint>>(stream) ?? new();
-        }
-        
-        // Otherwise refresh from ESI
-        return await RefreshCacheAsync();
-    }
 
-    public async Task<List<Blueprint>> RefreshCacheAsync(IProgress<string>? progress = null)
+    public async Task<List<Material>> GetMaterialsForBlueprintAsync(int blueprintTypeId)
     {
-        var blueprints = new List<Blueprint>();
-        
-        // Temporary cache to avoid fetching the same group name multiple times
-        var groupNames = new Dictionary<int, string>();
+        var materials = new List<Material>();
 
         try
         {
-            // Get group IDs from Category 9 (Blueprints)
-            var categoryResponse = await _httpClient.GetFromJsonAsync<CategoryResponse>($"universe/categories/{BlueprintCategoryId}/");
-            if (categoryResponse?.groups == null) return blueprints;
-
-            foreach (var groupId in categoryResponse.groups)
+            using (var connection = new SqliteConnection($"Data Source={_dbPath};Mode=ReadOnly"))
             {
-                // Fetch the group name if we haven't already
-                if (!groupNames.ContainsKey(groupId))
-                {
-                    var groupResponse = await _httpClient.GetFromJsonAsync<GroupResponse>($"universe/groups/{groupId}/");
-                    if (groupResponse != null)
-                    {
-                        groupNames[groupId] = groupResponse.name;
-                        
-                        // Now get the types for this group
-                        if (groupResponse.types != null)
-                        {
-                            foreach (var typeId in groupResponse.types)
-                            {
-                                // Get details for each type
-                                var typeResponse = await _httpClient.GetFromJsonAsync<TypeResponse>($"universe/types/{typeId}/");
+                await connection.OpenAsync();
 
-                                if (typeResponse != null && typeResponse.published)
-                                {
-                                    progress?.Report($"Adding blueprint {typeResponse.name}");
-                                    
-                                    blueprints.Add(new Blueprint()
-                                    {
-                                        TypeId = typeId,
-                                        Name = typeResponse.name,
-                                        Description = typeResponse.description,
-                                        GroupId = groupId,
-                                        GroupName = groupNames[groupId]
-                                    });
-                                }
-                            }
-                        }
+                var command = connection.CreateCommand();
+                command.CommandText = @"
+                    SELECT it.typeID, it.typeName, iam.quantity
+                    FROM industryActivityMaterials iam
+                    JOIN invTypes it ON iam.materialTypeID = it.typeID
+                    WHERE iam.typeID = @blueprintId
+                    AND iam.activityID = 1";
+
+                command.Parameters.AddWithValue("@blueprintId", blueprintTypeId);
+
+                using (var reader = await command.ExecuteReaderAsync())
+                {
+                    while (await reader.ReadAsync())
+                    {
+                        materials.Add(new Material
+                        {
+                            TypeId = reader.GetInt32(0),
+                            Name = reader.GetString(1),
+                            Quantity = reader.GetInt32(2)
+                        });
                     }
                 }
             }
-
-            // Save to a local cache
-            using var createStream = File.Create(_cacheFilePath);
-            await JsonSerializer.SerializeAsync(createStream, blueprints);
         }
         catch (Exception ex)
         {
-            // For now just log to console
-            Console.WriteLine($"Error refreshing blueprints: {ex.Message}");
+            Console.WriteLine($"Error fetching materials for blueprint {blueprintTypeId}: {ex.Message}");
         }
         
-        return blueprints;
+        return materials;
     }
-    
+
     // Helper records to match ESI JSON structure
     private record CategoryResponse(List<int> groups);
     private record GroupResponse(string name, List<int> types);

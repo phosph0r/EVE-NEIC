@@ -66,13 +66,10 @@ public partial class MainWindowViewModel : ViewModelBase
     private async Task RefreshBlueprintsAsync()
     {
         IsBusy = true;
-
-        var progress = new Progress<string>(name =>
-        {
-            StatusText = $"Refreshing blueprints from ESI (this may take a while)...[{name}]";
-        });
         
-        var list = await _blueprintService.RefreshCacheAsync(progress);
+        StatusText = $"Refreshing blueprints from SDE...]";
+        
+        var list = await _blueprintService.GetBlueprintsFromSdeAsync();
         _allBlueprints = list;
         FilterBlueprints();
         
@@ -126,4 +123,32 @@ public partial class MainWindowViewModel : ViewModelBase
     }
     
     [ObservableProperty] private Blueprint? _selectedBlueprint;
+    
+    partial void OnSelectedBlueprintChanged(Blueprint? value)
+    {
+        if (value != null && value.Materials.Count == 0)
+        {
+            // We use Task.Run so we don't block the UI while talking to the database
+            Task.Run(async () =>
+            {
+                var materials = await _blueprintService.GetMaterialsForBlueprintAsync(value.TypeId);
+                
+                // Avalonia UI updates must happen on the Main Thread
+                await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
+                {
+                    // Clear and refill the materials list
+                    value.Materials.Clear();
+                    foreach (var material in materials)
+                    {
+                        value.Materials.Add(material);
+                    }
+
+                    // We need to "refresh the UI
+                    OnPropertyChanged(nameof(SelectedBlueprint));
+                });
+            });
+        }
+        
+        Console.WriteLine($"Selected blueprint: {value.Name} (ID: {value.TypeId})");
+    }
 }
