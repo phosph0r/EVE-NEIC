@@ -106,7 +106,10 @@ public class BlueprintService
         using (var client = new HttpClient(handler))
         {
             client.DefaultRequestHeaders.Add("User-Agent", "EVE-NEIC");
-            client.Timeout = TimeSpan.FromMinutes(1);
+            client.Timeout = TimeSpan.FromMinutes(10);
+            
+            progress?.Report("Connecting to Fuzzwork...");
+            
             // Download the file
             using (var response = await client.GetAsync(downloadUrl, HttpCompletionOption.ResponseHeadersRead))
             {
@@ -122,22 +125,23 @@ public class BlueprintService
                     long totalRead = 0;
                     int read;
 
+                    int updateCounter = 0;
                     while ((read = await contentStream.ReadAsync(buffer, 0, buffer.Length)) > 0)
                     {
                         await fileStream.WriteAsync(buffer, 0, read);
                         totalRead += read;
+                        updateCounter++;
                         
-                        // Report progress every time we read a chunk
-                        if (totalBytes.HasValue)
+                        // Only update the UI every 10 chunks to avoid excessive UI updates
+                        if (updateCounter % 10 == 0)
                         {
+                            if (!totalBytes.HasValue) continue;
+                            
                             var percentage = (double)totalRead / totalBytes.Value * 100;
-                            progress?.Report($"Downloading SDE: {percentage:F1}% ({totalRead / 1024 / 1024}MB / {totalBytes.Value / 1024 / 1024}MB");
+                            progress?.Report($"Downloading EVE Static Data: {percentage:F1}% ({totalRead / 1024 / 1024}MB / {totalBytes.Value / 1024 / 1024}MB");
                         }
-
-                        else
-                        {
-                            progress?.Report($"Downloading SDE: {totalRead / 1024 / 1024}MB");
-                        }
+                        
+                        await Task.Delay(1);
                     }
                 }
             }
