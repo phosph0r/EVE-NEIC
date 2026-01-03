@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.IO;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -18,6 +19,8 @@ public partial class MainWindowViewModel : ViewModelBase
 
     [ObservableProperty] private bool _isBusy;
 
+    [ObservableProperty] private double _downloadProgress;
+
     public ObservableCollection<BlueprintGroup> GroupedBlueprints { get; } = new();
 
     public MainWindowViewModel()
@@ -30,9 +33,27 @@ public partial class MainWindowViewModel : ViewModelBase
     private async Task LoadBlueprintsAsync()
     {
         IsBusy = true;
-        StatusText = "Loading blueprints...";
+        
+        // Check if we need the database downloaded
+        if (!File.Exists(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "EVE-NEIC", "eve.db")))
+        {
+            StatusText = "First Time Setup: Downloading Static Data Export (SDE)...";
+            var progress = new Progress<string>(p =>
+            {
+                StatusText = p;
+                
+                // If the text contains a "%", try to parse it to update the progress bar
+                if (p.Contains("%") && double.TryParse(p.Split('%')[0].Split(':').Last().Trim(), out var val))
+                {
+                    DownloadProgress = val;
+                }
+            });
+            await _blueprintService.DownloadSdeAsync(progress);
+        }
 
-        var list = await _blueprintService.GetBlueprintsAsync();
+        // Load from the database
+        StatusText = "Loading blueprints from database...";
+        var list = await _blueprintService.GetBlueprintsFromSdeAsync();
         
         _allBlueprints = list;
         FilterBlueprints();
@@ -103,4 +124,6 @@ public partial class MainWindowViewModel : ViewModelBase
         
         UpdateGroupedList(filtered);
     }
+    
+    [ObservableProperty] private Blueprint? _selectedBlueprint;
 }

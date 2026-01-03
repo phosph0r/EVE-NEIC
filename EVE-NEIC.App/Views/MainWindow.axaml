@@ -17,16 +17,21 @@
     </Design.DataContext>
     
     <Grid ColumnDefinitions="450, *">
-    <DockPanel Margin="0,0,10,0">
+        <!-- Blueprint Selection Panel -->
+        <DockPanel Margin="0,0,10,0">
         <!-- Top Area: Status and Progress -->
         <StackPanel DockPanel.Dock="Top" Spacing="5" Margin="0,0,0,10">
             <TextBox Text="{Binding SearchText}"
                      Watermark="Search blueprints..."
                      Margin="0,0,0,5"/>
             <TextBlock Text="{Binding StatusText}" FontWeight="Bold" TextWrapping="Wrap" FontSize="12"/>
-            <ProgressBar IsIndeterminate="{Binding IsBusy}"
-                         IsVisible="{Binding IsBusy}"
-                         Height="4"/>
+            <ProgressBar Value="{Binding DownloadProgress}"
+                         Minimum="0"
+                         Maximum="100"
+                         IsIndeterminate="False"
+                         ShowProgressText="True"
+                         Height="16"
+                         IsVisible="{Binding IsBusy}"/>
         </StackPanel>
         
         <!-- Bottom Area: Actions -->
@@ -44,7 +49,7 @@
                 <ItemsControl.ItemTemplate>
                 <DataTemplate x:DataType="models:BlueprintGroup">
                     <Expander Header="{Binding Name}" IsExpanded="{Binding IsExpanded}" HorizontalAlignment="Stretch" Margin="0,2">
-                        <ListBox ItemsSource="{Binding Blueprints}">
+                        <ListBox ItemsSource="{Binding Blueprints}" SelectedItem="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).SelectedBlueprint}">
                             <ListBox.ItemTemplate>
                                 <DataTemplate x:DataType="models:Blueprint">
                                     <StackPanel Orientation="Horizontal" Spacing="10">
@@ -63,11 +68,23 @@
     </DockPanel> 
         
         <!-- RIGHT SIDE: Future Details Area -->
-        <Border Grid.Column="1" Background="#2b2b2b" CornerRadius="5">
-            <TextBlock Text="Blueprint Detals will appear here..."
-                       HorizontalAlignment="Center"
-                       VerticalAlignment="Center"
-                       Foreground="Gray"/>
+        <Border Grid.Column="1" Background="#2b2b2b" CornerRadius="5" Padding="20">
+            <!-- Only show this if a blueprint is selected -->
+            <StackPanel IsVisible="{Binding SelectedBlueprint, Converter={x:Static ObjectConverters.IsNotNull}}">
+            <TextBlock Text="{Binding SelectedBlueprint.Name}"
+                       FontSize="24"
+                       FontWeight="Bold"
+                       Margin="0,0,0,10"/>
+            <TextBlock Text="Description" FontWeight="Bold" Margin="0,10,0,5"/>
+            <TextBlock Text="{Binding SelectedBlueprint.Description}"
+                       TextWrapping="Wrap"
+                       Opacity="0.8"/>
+            
+            <TextBlock Text="{Binding SelectedBlueprint.TypeId, StringFormat='Type ID: {0}'}"
+                       FontSize="10"
+                       Foreground="Gray"
+                       Margin="0,20,0,0"/>
+            </StackPanel>
             </Border>
         </Grid>
 </Window>
