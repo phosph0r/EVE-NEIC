@@ -126,26 +126,51 @@ public partial class MainWindowViewModel : ViewModelBase
     
     partial void OnSelectedBlueprintChanged(Blueprint? value)
     {
-        if (value != null && value.Materials.Count == 0)
+        if (value != null)
         {
             // We use Task.Run so we don't block the UI while talking to the database
             Task.Run(async () =>
             {
-                var materials = await _blueprintService.GetMaterialsForBlueprintAsync(value.TypeId);
-                
-                // Avalonia UI updates must happen on the Main Thread
-                await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
+                // Get the materials from local SDE database
+                if (value.Materials.Count == 0)
                 {
-                    // Clear and refill the materials list
-                    value.Materials.Clear();
-                    foreach (var material in materials)
+                    var materials = await _blueprintService.GetMaterialsForBlueprintAsync(value.TypeId);
+
+                    // Avalonia UI updates must happen on the Main Thread
+                    await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
                     {
-                        value.Materials.Add(material);
+                        // Clear and refill the materials list
+                        value.Materials.Clear();
+                        foreach (var material in materials)
+                        {
+                            value.Materials.Add(material);
+                        }
+                    });
+                    
+                    // Fetch pices
+                    StatusText = $"Fetching prices for {value.Name} from Jita...";
+                    foreach (var material in value.Materials)
+                    {
+                        var price = await _blueprintService.GetJitaSellPriceAsync(material.TypeId);
+
+                        await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
+                        {
+                            material.UnitPrice = price;
+                            // Recalculate the total build cost
+                            value.RefreshTotal();
+                            // We need to "refresh the UI
+                            OnPropertyChanged(nameof(SelectedBlueprint));
+                        });
                     }
 
-                    // We need to "refresh the UI
-                    OnPropertyChanged(nameof(SelectedBlueprint));
-                });
+                    await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
+                    {
+                        // Notify the UI that the total build cost has changed
+                        OnPropertyChanged(nameof(SelectedBlueprint));
+                    });
+                    
+                    StatusText = $"Loaded {value.Materials.Count} materials with live Jita prices.";
+                }
             });
         }
         

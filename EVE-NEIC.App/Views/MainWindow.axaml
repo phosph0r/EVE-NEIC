@@ -9,7 +9,7 @@
         x:DataType="vm:MainWindowViewModel"
         Icon="/Assets/avalonia-logo.ico"
         Title="New Eden Industrial Companion"
-        
+
         xmlns:asyncImageLoader="clr-namespace:AsyncImageLoader;assembly=AsyncImageLoader.Avalonia">
 
     <Design.DataContext>
@@ -80,9 +80,9 @@
                     <Image Grid.Column="0" Grid.RowSpan="2"
                            Width="64" Height="64"
                            Margin="0,0,15,0"
-                           asyncImageLoader:ImageLoader.Source="{Binding SelectedBlueprint.IconUrl}"/>
+                           asyncImageLoader:ImageLoader.Source="{Binding SelectedBlueprint.IconUrl}" />
                     <!-- The Title -->
-                    <TextBlock Grid.Column="1" Grid.Row="0" 
+                    <TextBlock Grid.Column="1" Grid.Row="0"
                                Text="{Binding SelectedBlueprint.Name}"
                                FontSize="24"
                                FontWeight="Bold"
@@ -91,45 +91,68 @@
                     <TextBlock Grid.Column="1" Grid.Row="1"
                                Text="{Binding SelectedBlueprint.GroupName}"
                                Foreground="Gray" FontSize="14"
-                               VerticalAlignment="Top"/>
-                    </Grid>
-                
-                <Separator Height="1" Background="#33ffffff" Margin="0,10"/>
-                
+                               VerticalAlignment="Top" />
+                </Grid>
+
+                <Separator Height="1" Background="#33ffffff" Margin="0,10" />
+
                 <TextBlock Text="Description" FontWeight="Bold" Margin="0,10,0,5" />
                 <TextBlock Text="{Binding SelectedBlueprint.Description}"
                            TextWrapping="Wrap"
                            Opacity="0.8" />
-                
-                <TextBlock Text="Manufacturing Materials" FontWeight="Bold" Margin="0,20,0,5"/>
-                
+
+                <TextBlock Text="Manufacturing Materials" FontWeight="Bold" Margin="0,20,0,5" />
+
                 <Border Background="#1a1a1a" CornerRadius="5" Padding="10">
-                        <ItemsControl ItemsSource="{Binding SelectedBlueprint.Materials}">
-                            <ItemsControl.ItemTemplate>
-                                <DataTemplate x:DataType="models:Material">
-                                    <!-- Wrap the row in a border to provide a separator line -->
-                                    <Border BorderBrush="#33ffffff"
-                                            BorderThickness="0,0,0,1"
-                                            Padding="0,4">
+                    <ItemsControl ItemsSource="{Binding SelectedBlueprint.Materials}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="models:Material">
+                                <!-- Wrap the row in a border to provide a separator line -->
+                                <Border BorderBrush="#33ffffff"
+                                        BorderThickness="0,0,0,1"
+                                        Padding="0,4">
                                     <DockPanel Margin="0.2">
-                                        <TextBlock Text="{Binding Quantity, StringFormat='\{0:N0\}'}"
+                                        <!-- TOTAL Price for this material (Quantity * UnitPrice) -->
+                                        <TextBlock Text="{Binding TotalPrice, StringFormat='\{0:N2\} ISK'}"
                                                    DockPanel.Dock="Right"
                                                    Foreground="#ffb300"
                                                    FontWeight="Bold"
                                                    TextAlignment="Right"
-                                                   />
+                                                   Width="150" />
+
+                                        <!-- Quantity -->
+                                        <TextBlock Text="{Binding Quantity, StringFormat='\{0:N0\}'}"
+                                                   DockPanel.Dock="Right"
+                                                   Foreground="#ffb300"
+                                                   FontWeight="Bold"
+                                                   TextAlignment="Right" />
+                                        <!-- Name -->
                                         <TextBlock Text="{Binding Name}"
-                                                   HorizontalAlignment="Left"/>
-                                        </DockPanel>
-                                        </Border>
-                                    </DataTemplate>
-                            </ItemsControl.ItemTemplate>
-                        </ItemsControl>
+                                                   HorizontalAlignment="Left" />
+                                    </DockPanel>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
                 </Border>
                 <TextBlock Text="{Binding SelectedBlueprint.TypeId, StringFormat='Type ID: {0}'}"
                            FontSize="10"
                            Foreground="Gray"
                            Margin="0,20,0,0" />
+                
+                <!-- Total Price -->
+                <StackPanel Margin="0,15,0,0">
+                    <Separator Height="1" Background="Gray" Margin="0,0,0,10" />
+                    <DockPanel>
+                        <TextBlock Text="Total Build Cost:" FontWeight="Bold" FontSize="16" />
+                        <TextBlock Text="{Binding SelectedBlueprint.TotalBuildCost, StringFormat='\{0:N2\} ISK'}"
+                                   DockPanel.Dock="Right"
+                                   TextAlignment="Right"
+                                   Foreground="#00ff00"
+                                   FontWeight="Bold"
+                                   FontSize="18" />
+                    </DockPanel>
+                </StackPanel>
             </StackPanel>
         </Border>
     </Grid>

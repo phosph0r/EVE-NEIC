@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Net.Http;
+using System.Net.Http.Json;
 using System.Threading.Tasks;
 using Avalonia.Controls.Converters;
 using EVE_NEIC.App.Models;
@@ -19,6 +21,12 @@ public class BlueprintService
     private const string EsiBaseUrl = "https://esi.evetech.net/latest/";
     private const int BlueprintCategoryId = 9;
 
+    // Helper records to match ESI JSON structure
+    private record CategoryResponse(List<int> groups);
+    private record GroupResponse(string name, List<int> types);
+    private record TypeResponse(string name, string description, bool published);
+    private record MarketOrderResponse(decimal price);
+    
     public BlueprintService()
     {
         var appData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
@@ -85,7 +93,7 @@ public class BlueprintService
         
         return blueprints;
     }
-
+    
     public async Task DownloadSdeAsync(IProgress<string>? progress = null)
     {
         string compressedFilePath = _dbPath + ".bz2";
@@ -194,8 +202,25 @@ public class BlueprintService
         return materials;
     }
 
-    // Helper records to match ESI JSON structure
-    private record CategoryResponse(List<int> groups);
-    private record GroupResponse(string name, List<int> types);
-    private record TypeResponse(string name, string description, bool published);
+    public async Task<decimal> GetJitaSellPriceAsync(int typeId)
+    {
+        try
+        {
+            // 10000002 is 'The Forge'
+            string url = $"markets/10000002/orders/?order_type=sell&type_id={typeId}";
+
+            var orders = await _httpClient.GetFromJsonAsync<List<MarketOrderResponse>>(url);
+
+            if (orders == null || orders.Count == 0)
+                return 0;
+
+            // Find the lowest price (cheapest sell order)
+            return orders.Min(o => o.price);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error fetching price for {typeId}: {ex.Message}");
+            return 0;
+        }
+    }
 }

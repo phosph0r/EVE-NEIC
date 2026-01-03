@@ -1,8 +1,10 @@
 ﻿using System.Collections.ObjectModel;
+using System.Linq;
+using CommunityToolkit.Mvvm.ComponentModel;
 
 namespace EVE_NEIC.App.Models;
 
-public class Blueprint
+public partial class Blueprint : ObservableObject
 {
     public int TypeId { get; set; }
     public string Name { get; set; } = string.Empty;
@@ -11,4 +13,11 @@ public class Blueprint
     public string Description { get; set; } = string.Empty;
     public ObservableCollection<Material> Materials { get; set; } = new();
     public string IconUrl => $"https://images.evetech.net/types/{TypeId}/bp?size=64";
+    
+    public decimal TotalBuildCost => Materials.Sum(m => m.TotalPrice);
+
+    public void RefreshTotal()
+    {
+        OnPropertyChanged(nameof(TotalBuildCost));
+    }
 }
