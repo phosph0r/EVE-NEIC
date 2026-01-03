@@ -17,7 +17,8 @@ public partial class Blueprint : ObservableObject
     
     public decimal TotalBuildCost => Materials.Sum(m => m.TotalPrice);
 
-    [ObservableProperty] [NotifyPropertyChangedFor(nameof(Profit))] [NotifyPropertyChangedFor(nameof(Margin))]
+    [ObservableProperty] 
+    [NotifyPropertyChangedFor(nameof(Profit))] [NotifyPropertyChangedFor(nameof(Margin))]
     private decimal _productPrice;
     
     public decimal Profit => ProductPrice - TotalBuildCost;
@@ -30,5 +31,25 @@ public partial class Blueprint : ObservableObject
         OnPropertyChanged(nameof(TotalBuildCost));
         OnPropertyChanged(nameof(Profit));
         OnPropertyChanged(nameof(Margin));
+    }
+    
+    // -- RESEARCH --
+    [ObservableProperty] 
+    [NotifyPropertyChangedFor(nameof(TotalBuildCost))] [NotifyPropertyChangedFor(nameof(Profit))] [NotifyPropertyChangedFor(nameof(Margin))]
+    private int _materialEfficiency;
+    
+    [ObservableProperty]
+    private int _timeEfficiency;
+
+    partial void OnMaterialEfficiencyChanged(int value)
+    {
+        // When the slider moves, tell every material to re-calculate it's quantity
+        foreach (var material in Materials)
+        {
+            material.RefreshUI();
+        }
+        
+        // Update the grand total
+        RefreshTotal();
     }
 }

@@ -165,7 +165,7 @@ public class BlueprintService
         }
     }
 
-    public async Task<List<Material>> GetMaterialsForBlueprintAsync(int blueprintTypeId)
+    public async Task<List<Material>> GetMaterialsForBlueprintAsync(Blueprint blueprint)
     {
         var materials = new List<Material>();
 
@@ -183,17 +183,17 @@ public class BlueprintService
                     WHERE iam.typeID = @blueprintId
                     AND iam.activityID = 1";
 
-                command.Parameters.AddWithValue("@blueprintId", blueprintTypeId);
+                command.Parameters.AddWithValue("@blueprintId", blueprint.TypeId);
 
                 using (var reader = await command.ExecuteReaderAsync())
                 {
                     while (await reader.ReadAsync())
                     {
-                        materials.Add(new Material
+                        materials.Add(new Material(blueprint)
                         {
                             TypeId = reader.GetInt32(0),
                             Name = reader.GetString(1),
-                            Quantity = reader.GetInt32(2)
+                            BaseQuantity = reader.GetInt32(2)
                         });
                     }
                 }
@@ -201,7 +201,7 @@ public class BlueprintService
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error fetching materials for blueprint {blueprintTypeId}: {ex.Message}");
+            Console.WriteLine($"Error fetching materials for blueprint {blueprint.TypeId}: {ex.Message}");
         }
         
         return materials;

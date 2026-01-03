@@ -134,7 +134,7 @@ public partial class MainWindowViewModel : ViewModelBase
                 // Get the materials from a local SDE database
                 if (value.Materials.Count == 0)
                 {
-                    var materials = await _blueprintService.GetMaterialsForBlueprintAsync(value.TypeId);
+                    var materials = await _blueprintService.GetMaterialsForBlueprintAsync(value);
 
                     // Avalonia UI updates must happen on the Main Thread
                     await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>

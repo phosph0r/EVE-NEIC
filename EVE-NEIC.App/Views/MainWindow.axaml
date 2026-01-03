@@ -106,8 +106,34 @@
                            TextWrapping="Wrap"
                            Opacity="0.8" />
 
+                <!-- Production Efficiency Section -->
+                <StackPanel Spacing="5" Margin="0,15,0,10">
+                    <TextBlock Text="Blueprint Research" FontWeight="Bold" FontSize="14" />
+                    <!-- ME Slider -->
+                    <DockPanel>
+                        <TextBlock Text="{Binding SelectedBlueprint.MaterialEfficiency, StringFormat='ME: {0}%'}"
+                                   Width="60" VerticalAlignment="Center" />
+                        <Slider Minimum="0" Maximum="10"
+                                Value="{Binding SelectedBlueprint.MaterialEfficiency}"
+                                TickFrequency="1"
+                                IsSnapToTickEnabled="True"
+                                Margin="10,0,0,0" />
+                    </DockPanel>
+                    <!-- TE Slider -->
+                    <DockPanel>
+                        <TextBlock Text="{Binding SelectedBlueprint.TimeEfficiency, StringFormat='TE: {0}%'}"
+                                   Width="60" VerticalAlignment="Center"/>
+                        <Slider Minimum="0" Maximum="20"
+                                Value="{Binding SelectedBlueprint.TimeEfficiency}"
+                                TickFrequency="2"
+                                IsSnapToTickEnabled="True"
+                                Margin="10,0,0,0"/>
+                    </DockPanel>
+                </StackPanel>
+                
+                <Separator Height="1" Background="#33ffffff" Margin="0,5,0,15"/>
+                
                 <TextBlock Text="Manufacturing Materials" FontWeight="Bold" Margin="0,20,0,5" />
-
                 <Border Background="#1a1a1a" CornerRadius="5" Padding="10">
                     <ItemsControl ItemsSource="{Binding SelectedBlueprint.Materials}">
                         <ItemsControl.ItemTemplate>
@@ -117,6 +143,7 @@
                                         BorderThickness="0,0,0,1"
                                         Padding="0,4">
                                     <DockPanel Margin="0.2">
+                                        
                                         <!-- TOTAL Price for this material (Quantity * UnitPrice) -->
                                         <TextBlock Text="{Binding TotalPrice, StringFormat='\{0:N2\} ISK'}"
                                                    DockPanel.Dock="Right"
@@ -131,9 +158,19 @@
                                                    Foreground="#ffb300"
                                                    FontWeight="Bold"
                                                    TextAlignment="Right" />
+                                        
                                         <!-- Name -->
                                         <TextBlock Text="{Binding Name}"
-                                                   HorizontalAlignment="Left" />
+                                                   VerticalAlignment="Center"
+                                                   TextTrimming="CharacterEllipsis"/>
+                                        
+                                        <!-- Unit Price -->
+                                        <TextBlock Text="{Binding UnitPrice, StringFormat= '(\{0:N2\}/Unit)'}"
+                                                   DockPanel.Dock="Right"
+                                                   Foreground="Gray"
+                                                   FontSize="11"
+                                                   VerticalAlignment="Center"
+                                                   Margin="10,0,0,0"/>
                                     </DockPanel>
                                 </Border>
                             </DataTemplate>
