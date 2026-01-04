@@ -196,6 +196,25 @@
                     </DockPanel>
                 </StackPanel>
                 
+                <StackPanel Spacing="5" Margin="0,10,0,0">
+                    <TextBlock Text="Market Fees" FontWeight="Bold" FontSize="14"/>
+                    
+                    <!-- Sales Tax -->
+                    <DockPanel>
+                        <TextBlock Text="Sales Tax (%):" Width="100" VerticalAlignment="Center"/>
+                        <NumericUpDown Value="{Binding SelectedBlueprint.SalesTaxRate}"
+                                       Increment="0.1" Minimum="0" Maximum="10"
+                                       FormatString="0.0"/>
+                    </DockPanel>
+                    <!-- Brokers Fee -->
+                    <DockPanel>
+                        <TextBlock Text="Brokers Fee (%):" Width="100" VerticalAlignment="Center"/>
+                        <NumericUpDown Value="{Binding SelectedBlueprint.BrokerFeeRate}"
+                                       Increment="0.1" Minimum="0" Maximum="10"
+                                       FormatString="0.0"/>
+                    </DockPanel>
+                </StackPanel>
+                
                 <StackPanel>
                     <DockPanel Margin="0,0,0,5">
                         <TextBlock Text="Market Value (Jita Sell):" FontSize="12" Opacity="0.7"/>
@@ -220,6 +239,24 @@
                                        FontSize="18"
                                        Foreground="{Binding SelectedBlueprint.Profit, Converter={StaticResource ProfitColorConverter}}"/>
                         </StackPanel>
+                    </DockPanel>
+                </StackPanel>
+                <StackPanel Margin="0,15,0,0" Spacing="5">
+                    <!-- Production Time -->
+                    <DockPanel>
+                        <TextBlock Text="Production Time:" FontSize="12" Opacity="0.7"/>
+                        <TextBlock Text="{Binding SelectedBlueprint.FormattedAdjustedProductionTime}"
+                                   DockPanel.Dock="Right" TextAlignment="Right"/>
+                    </DockPanel>
+                    <!-- ISK Per Hour -->
+                    <DockPanel>
+                        <TextBlock Text="ISK Per Hour:" FontWeight="Bold" FontSize="16"/>
+                        <TextBlock Text="{Binding SelectedBlueprint.IskPerHour, StringFormat='\{0:N2\} ISK/Hr'}"
+                                   DockPanel.Dock="Right"
+                                   TextAlignment="Right"
+                                   Foreground="#00d0ff"
+                                   FontWeight="Bold"
+                                   FontSize="18"/>
                     </DockPanel>
                 </StackPanel>
             </StackPanel>
