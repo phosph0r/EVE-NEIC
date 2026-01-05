@@ -9,6 +9,7 @@ public partial class Blueprint : ObservableObject
 {
     public int TypeId { get; set; }
     public int ProductTypeId { get; set; }
+    public int ProductQuantity { get; set; } = 1;
     public string Name { get; set; } = string.Empty;
     public int GroupId { get; set; }
     public string GroupName { get; set; } = string.Empty;
@@ -19,11 +20,13 @@ public partial class Blueprint : ObservableObject
     public decimal TotalBuildCost => Materials.Sum(m => m.TotalPrice);
 
     [ObservableProperty] 
-    [NotifyPropertyChangedFor(nameof(Profit))] [NotifyPropertyChangedFor(nameof(Margin))]
+    [NotifyPropertyChangedFor(nameof(Profit))] [NotifyPropertyChangedFor(nameof(Margin))] [NotifyPropertyChangedFor(nameof(IskPerHour))]
     private decimal _productPrice;
     
     // Divide by zero protection
-    public double Margin => ProductPrice > 0 ? (double)(Profit / ProductPrice) * 100 : 0;
+    public double Margin => ProductPrice > 0 
+        ? (double)(Profit / (ProductPrice * ProductQuantity)) * 100 
+        : 0;
     
     public void RefreshTotal()
     {
@@ -35,7 +38,7 @@ public partial class Blueprint : ObservableObject
     
     // -- RESEARCH --
     [ObservableProperty] 
-    [NotifyPropertyChangedFor(nameof(TotalBuildCost))] [NotifyPropertyChangedFor(nameof(Profit))] [NotifyPropertyChangedFor(nameof(Margin))]
+    [NotifyPropertyChangedFor(nameof(TotalBuildCost))] [NotifyPropertyChangedFor(nameof(Profit))] [NotifyPropertyChangedFor(nameof(Margin))] [NotifyPropertyChangedFor(nameof(IskPerHour))]
     private int _materialEfficiency;
     
     [ObservableProperty]
@@ -98,9 +101,9 @@ public partial class Blueprint : ObservableObject
     {
         get
         {
-            decimal taxAmount = ProductPrice * (decimal)(SalesTaxRate / 100.0);
-            decimal feeAmount = ProductPrice * (decimal)(BrokerFeeRate / 100.0);
-            return ProductPrice - taxAmount - feeAmount - TotalBuildCost;
+            decimal taxAmount = (ProductPrice * ProductQuantity) * (decimal)(SalesTaxRate / 100.0);
+            decimal feeAmount = (ProductPrice * ProductQuantity) * (decimal)(BrokerFeeRate / 100.0);
+            return (ProductPrice * ProductQuantity) - taxAmount - feeAmount - TotalBuildCost;
         }
     }
     

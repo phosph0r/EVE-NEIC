@@ -203,7 +203,7 @@
                     <DockPanel>
                         <TextBlock Text="Sales Tax (%):" Width="100" VerticalAlignment="Center"/>
                         <NumericUpDown Value="{Binding SelectedBlueprint.SalesTaxRate}"
-                                       Increment="0.1" Minimum="0" Maximum="10"
+                                       Increment="0.1" Minimum="3.8" Maximum="10"
                                        FormatString="0.0"/>
                     </DockPanel>
                     <!-- Brokers Fee -->
